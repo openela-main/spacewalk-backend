@@ -1,0 +1,717 @@
+diff --git a/spacewalk-backend.spec b/spacewalk-backend.spec
+index ca8f1a8..22ad9d0 100644
+--- a/spacewalk-backend.spec
++++ b/spacewalk-backend.spec
+@@ -37,200 +37,18 @@ Name: spacewalk-backend
+ Summary: Common programs needed to be installed on the Spacewalk servers/proxies
+ License: GPLv2
+ Version: 2.8.48
+-Release: 2%{?dist}
++Release: 3%{?dist}
+ URL:       https://github.com/spacewalkproject/spacewalk
+ Source0: https://github.com/spacewalkproject/spacewalk/archive/%{name}-%{version}.tar.gz
+ BuildArch: noarch
+-Requires: python, rpm-python
+-# /etc/rhn is provided by spacewalk-proxy-common or by spacewalk-config
+-Requires: /etc/rhn
+-Requires: rhnlib >= 2.5.74
+-# for Debian support
+-Requires: python-debian
+-Requires: %{name}-libs >= 1.1.16-1
+-%if 0%{?rhel} > 5
+-Requires: pyliblzma
+-%endif
+-%if 0%{?pylint_check}
+-BuildRequires: spacewalk-python2-pylint
+-%endif
+-BuildRequires: /usr/bin/msgfmt
+-BuildRequires: /usr/bin/docbook2man
+-BuildRequires: docbook-utils
+-BuildRequires: spacewalk-usix
+-%if 0%{?fedora} || 0%{?rhel} > 5 || 0%{?suse_version} > 1310
+-BuildRequires: rhnlib >= 2.5.74
+-BuildRequires: python2-rhn-client-tools
+-BuildRequires: rpm-python
+-BuildRequires: %{m2crypto}
+-%endif
+-Requires(pre): %{apache_pkg}
+-Requires: %{apache_pkg}
+-Requires: spacewalk-usix
+-# we don't really want to require this redhat-release, so we protect
+-# against installations on other releases using conflicts...
+-Obsoletes: rhns-common < 5.3.0
+-Obsoletes: rhns < 5.3.0
+-Provides: rhns = 1:%{version}-%{release}
+-Provides: rhns-common = 1:%{version}-%{release}
+-Obsoletes: spacewalk-backend-upload-server < 1.2.28
+-Provides: spacewalk-backend-upload-server = 1:%{version}-%{release}
+ 
+ %description
+ Generic program files needed by the Spacewalk server machines.
+ This package includes the common code required by all servers/proxies.
+ 
+-%package sql
+-Summary: Core functions providing SQL connectivity for the Spacewalk backend modules
+-Requires(pre): %{name} = %{version}-%{release}
+-Requires: %{name} = %{version}-%{release}
+-Obsoletes: rhns-sql < 5.3.0
+-Provides: rhns-sql = 1:%{version}-%{release}
+-Requires: %{name}-sql-virtual = %{version}-%{release}
+-Requires: spacewalk-usix
+-
+-%description sql
+-This package contains the basic code that provides SQL connectivity for
+-the Spacewalk backend modules.
+-
+-%package sql-oracle
+-Summary: Oracle backend for Spacewalk
+-Requires: python(:DBAPI:oracle)
+-Requires: spacewalk-usix
+-Provides: %{name}-sql-virtual = %{version}-%{release}
+-
+-%description sql-oracle
+-This package contains provides Oracle connectivity for the Spacewalk backend
+-modules.
+-
+-%package sql-postgresql
+-Summary: Postgresql backend for Spacewalk
+-Requires: python-psycopg2 >= 2.0.14-2
+-Requires: spacewalk-usix
+-Provides: %{name}-sql-virtual = %{version}-%{release}
+-
+-%description sql-postgresql
+-This package contains provides PostgreSQL connectivity for the Spacewalk
+-backend modules.
+-
+-%package server
+-Summary: Basic code that provides Spacewalk Server functionality
+-Requires(pre): %{name}-sql = %{version}-%{release}
+-Requires: %{name}-sql = %{version}-%{release}
+-Requires: spacewalk-usix
+-Requires: PyPAM
+-Obsoletes: rhns-server < 5.3.0
+-Provides: rhns-server = 1:%{version}-%{release}
+-
+-#this exists only on rhel5 and rhel6
+-Conflicts: python-sgmlop
+-# cobbler-web is known to break our configuration
+-Conflicts: cobbler-web
+-
+-Requires: mod_wsgi
+-
+-
+-%description server
+-This package contains the basic code that provides server/backend
+-functionality for a variety of XML-RPC receivers. The architecture is
+-modular so that you can plug/install additional modules for XML-RPC
+-receivers and get them enabled automatically.
+-
+-%package xmlrpc
+-Summary: Handler for /XMLRPC
+-Requires: %{name}-server = %{version}-%{release}
+-Requires: rpm-python
+-Requires: spacewalk-usix
+-Obsoletes: rhns-server-xmlrpc < 5.3.0
+-Obsoletes: rhns-xmlrpc < 5.3.0
+-Provides: rhns-server-xmlrpc = 1:%{version}-%{release}
+-Provides: rhns-xmlrpc = 1:%{version}-%{release}
+-
+-%description xmlrpc
+-These are the files required for running the /XMLRPC handler, which
+-provide the basic support for the registration client (rhn_register)
+-and the up2date clients.
+-
+-%package applet
+-Summary: Handler for /APPLET
+-Requires: %{name}-server = %{version}-%{release}
+-Requires: spacewalk-usix
+-Obsoletes: rhns-applet < 5.3.0
+-Provides: rhns-applet = 1:%{version}-%{release}
+-
+-%description applet
+-These are the files required for running the /APPLET handler, which
+-provides the functions for the Spacewalk applet.
+-
+-%package app
+-Summary: Handler for /APP
+-Requires: %{name}-server = %{version}-%{release}
+-Requires: spacewalk-usix
+-Obsoletes: rhns-server-app < 5.3.0
+-Obsoletes: rhns-app < 5.3.0
+-Provides: rhns-server-app = 1:%{version}-%{release}
+-Provides: rhns-app = 1:%{version}-%{release}
+-Obsoletes: spacewalk-backend-xp < 1.8.38
+-Provides: spacewalk-backend-xp = %{version}-%{release}
+-Obsoletes: rhns-server-xp < 5.3.0
+-Obsoletes: rhns-xp < 5.3.0
+-Provides: rhns-server-xp = 1:%{version}-%{release}
+-Provides: rhns-xp = 1:%{version}-%{release}
+-
+-%description app
+-These are the files required for running the /APP handler.
+-Calls to /APP are used by internal maintenance tools (rhnpush).
+-
+-%package iss
+-Summary: Handler for /SAT
+-Requires: %{name}-server = %{version}-%{release}
+-Obsoletes: rhns-sat < 5.3.0
+-Provides: rhns-sat = 1:%{version}-%{release}
+-
+-%description iss
+-%{name} contains the basic code that provides server/backend
+-functionality for a variety of XML-RPC receivers. The architecture is
+-modular so that you can plug/install additional modules for XML-RPC
+-receivers and get them enabled automatically.
+-
+-This package contains /SAT handler, which provide Inter Spacewalk Sync
+-capability.
+-
+-%package iss-export
+-Summary: Listener for the Server XML dumper
+-Requires: rpm-python
+-Requires: %{name}-xml-export-libs = %{version}-%{release}
+-Requires: spacewalk-usix
+-
+-%description iss-export
+-%{name} contains the basic code that provides server/backend
+-functionality for a variety of XML-RPC receivers. The architecture is
+-modular so that you can plug/install additional modules for XML-RPC
+-receivers and get them enabled automatically.
+-
+-This package contains listener for the Server XML dumper.
+-
+-%package libs
+-Summary: Spacewalk server and client tools libraries
+-%if 0%{?suse_version}
+-BuildRequires: python-devel
+-%else
+-Requires: python
+-BuildRequires: python2-devel
+-Conflicts: %{name} < 1.7.0
+-Requires: spacewalk-usix
+-%endif
+-
+-%description libs
+-Libraries required by both Spacewalk server and Spacewalk client tools.
+-
+-%if 0%{?build_py3}
+-
+ %package -n python3-%{name}-libs
+ Summary: Spacewalk client tools libraries for Fedora 23
+-BuildRequires: python2-devel
+ BuildRequires: python3-devel
+-BuildRequires: python2-spacewalk-usix
+ Conflicts: %{name} < 1.7.0
+ %if 0%{?suse_version}
+ Requires:       python3-base
+@@ -242,100 +60,6 @@ Requires: python3-spacewalk-usix
+ %description -n python3-%{name}-libs
+ Libraries required by Spacewalk client tools on Fedora 23.
+ 
+-%endif
+-
+-%package config-files-common
+-Summary: Common files for the Configuration Management project
+-Requires: %{name}-server = %{version}-%{release}
+-Requires: spacewalk-usix
+-Obsoletes: rhns-config-files-common < 5.3.0
+-Provides: rhns-config-files-common = 1:%{version}-%{release}
+-
+-%description config-files-common
+-Common files required by the Configuration Management project
+-
+-%package config-files
+-Summary: Handler for /CONFIG-MANAGEMENT
+-Requires: %{name}-config-files-common = %{version}-%{release}
+-Obsoletes: rhns-config-files < 5.3.0
+-Provides: rhns-config-files = 1:%{version}-%{release}
+-
+-%description config-files
+-This package contains the server-side code for configuration management.
+-
+-%package config-files-tool
+-Summary: Handler for /CONFIG-MANAGEMENT-TOOL
+-Requires: %{name}-config-files-common = %{version}-%{release}
+-Requires: spacewalk-usix
+-Obsoletes: rhns-config-files-tool < 5.3.0
+-Provides: rhns-config-files-tool = 1:%{version}-%{release}
+-
+-%description config-files-tool
+-This package contains the server-side code for configuration management tool.
+-
+-%package package-push-server
+-Summary: Listener for rhnpush (non-XMLRPC version)
+-Requires: %{name}-server = %{version}-%{release}
+-Obsoletes: rhns-package-push-server < 5.3.0
+-Provides: rhns-package-push-server = 1:%{version}-%{release}
+-
+-%description package-push-server
+-Listener for rhnpush (non-XMLRPC version)
+-
+-%package tools
+-Summary: Spacewalk Services Tools
+-Requires: %{name}-xmlrpc = %{version}-%{release}
+-Requires: %{name}-app = %{version}-%{release}
+-Requires: %{name}
+-Requires: spacewalk-certs-tools
+-Requires: spacewalk-admin >= 0.1.1-0
+-Requires: python2-gzipstream
+-Requires: python2-rhn-client-tools
+-%if 0%{?fedora} || 0%{?rhel} > 6
+-Requires: pyliblzma
+-%endif
+-%if 0%{?fedora} || 0%{?rhel}
+-Requires: python2-devel
+-Requires: mod_ssl
+-%endif
+-Requires: %{name}-xml-export-libs
+-Requires: cobbler20
+-Requires: rhnlib  >= 2.5.57
+-Requires: spacewalk-usix
+-Requires: python-requests
+-Requires: %{m2crypto}
+-%if 0%{?fedora} || 0%{?rhel} > 5
+-BuildRequires: python-requests
+-%endif
+-Obsoletes: rhns-satellite-tools < 5.3.0
+-Obsoletes: spacewalk-backend-satellite-tools <= 0.2.7
+-Provides: spacewalk-backend-satellite-tools = %{version}-%{release}
+-Provides: rhns-satellite-tools = 1:%{version}-%{release}
+-
+-%description tools
+-Various utilities for the Spacewalk Server.
+-
+-%package xml-export-libs
+-Summary: Spacewalk XML data exporter
+-Requires: %{name}-server = %{version}-%{release}
+-Requires: spacewalk-usix
+-Obsoletes: rhns-xml-export-libs < 5.3.0
+-Provides: rhns-xml-export-libs = 1:%{version}-%{release}
+-
+-%description xml-export-libs
+-Libraries required by various exporting tools
+-
+-%package cdn
+-Summary: CDN tools
+-Requires: %{name}-server = %{version}-%{release}
+-Requires: spacewalk-usix
+-Requires: subscription-manager
+-Requires: %{m2crypto}
+-Requires: python-argparse
+-
+-%description cdn
+-Tools for syncing content from Red Hat CDN
+-
+ %prep
+ %setup -q
+ 
+@@ -377,260 +101,15 @@ popd
+ %endif
+ %endif
+ 
+-%clean
++rm -rf $RPM_BUILD_ROOT%{rhnroot}
++rm -rf $RPM_BUILD_ROOT%{pythonrhnroot}
++rm -rf $RPM_BUILD_ROOT/etc
++rm -rf $RPM_BUILD_ROOT/usr/share/locale
++rm -rf $RPM_BUILD_ROOT/usr/bin
+ 
+-%check
+-cp %{pythonrhnroot}/common/usix.py $RPM_BUILD_ROOT%{pythonrhnroot}/common
+-make -f Makefile.backend PYTHONPATH=$RPM_BUILD_ROOT%{python_sitelib} test || :
+-
+-%if 0%{?pylint_check}
+-# check coding style
+-export PYTHONPATH=$RPM_BUILD_ROOT%{python_sitelib}:/usr/lib/rhn:/usr/share/rhn
+-spacewalk-python2-pylint $RPM_BUILD_ROOT%{pythonrhnroot}/common \
+-                         $RPM_BUILD_ROOT%{pythonrhnroot}/satellite_exporter \
+-                         $RPM_BUILD_ROOT%{pythonrhnroot}/satellite_tools \
+-                         $RPM_BUILD_ROOT%{pythonrhnroot}/cdn_tools \
+-                         $RPM_BUILD_ROOT%{pythonrhnroot}/upload_server \
+-                         $RPM_BUILD_ROOT%{pythonrhnroot}/wsgi
+-%endif
+ 
+-rm -f $RPM_BUILD_ROOT%{pythonrhnroot}/common/usix.py*
+-
+-%pre server
+-OLD_SECRET_FILE=%{_var}/www/rhns/server/secret/rhnSecret.py
+-if [ -f $OLD_SECRET_FILE ]; then
+-    install -d -m 750 -o root -g %{apache_group} %{rhnconf}
+-    mv ${OLD_SECRET_FILE}*  %{rhnconf}
+-fi
+-
+-%post server
+-if [ ! -e %{rhnconf}/rhn.conf ]; then
+-    exit 0
+-fi
+-
+-# Is secret key in our config file?
+-regex="^[[:space:]]*(server\.|)secret_key[[:space:]]*=.*$"
+-
+-if grep -E -i $regex %{rhnconf}/rhn.conf > /dev/null 2>&1 ; then
+-    # secret key already there
+-    rm -f %{rhnconf}/rhnSecret.py*
+-    exit 0
+-fi
+-
+-# Generate a secret key if old one is not present
+-if [ -f %{rhnconf}/rhnSecret.py ]; then
+-    secret_key=$(PYTHONPATH=%{rhnconf} %{__python} -c \
+-        "from rhnSecret import SECRET_KEY; print SECRET_KEY")
+-else
+-    secret_key=$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | sha1sum - |
+-        awk '{print $1}')
+-fi
+-
+-echo "server.secret_key = $secret_key" >> %{rhnconf}/rhn.conf
+-rm -f %{rhnconf}/rhnSecret.py*
+-
+-%files
+-%doc LICENSE
+-%dir %{pythonrhnroot}
+-%dir %{pythonrhnroot}/common
+-%{pythonrhnroot}/common/apache.py*
+-%{pythonrhnroot}/common/byterange.py*
+-%{pythonrhnroot}/common/rhnApache.py*
+-%{pythonrhnroot}/common/rhnCache.py*
+-%{pythonrhnroot}/common/rhnConfig.py*
+-%{pythonrhnroot}/common/rhnException.py*
+-%{pythonrhnroot}/common/rhnFlags.py*
+-%{pythonrhnroot}/common/rhnLog.py*
+-%{pythonrhnroot}/common/rhnMail.py*
+-%{pythonrhnroot}/common/rhnTB.py*
+-%{pythonrhnroot}/common/rhnRepository.py*
+-%{pythonrhnroot}/common/rhnTranslate.py*
+-%{pythonrhnroot}/common/RPC_Base.py*
+-%attr(770,root,%{apache_group}) %dir %{_var}/log/rhn
+-# Workaround for strict-whitespace-enforcement in httpd
+-%attr(644,root,%{apache_group}) %config %{apacheconfd}/aa-spacewalk-server.conf
+-# config files
+-%attr(755,root,%{apache_group}) %dir %{rhnconfigdefaults}
+-%attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn.conf
+-%attr(755,root,root) %{_bindir}/spacewalk-cfg-get
+-%{_mandir}/man8/spacewalk-cfg-get.8.gz
+-# wsgi stuff
+-%dir %{rhnroot}/wsgi
+-%{rhnroot}/wsgi/__init__.py*
+-%{rhnroot}/wsgi/wsgiHandler.py*
+-%{rhnroot}/wsgi/wsgiRequest.py*
+-
+-%files sql
+-%doc LICENSE
+-# Need __init__ = share it with rhns-server
+-%dir %{pythonrhnroot}/server
+-%{pythonrhnroot}/server/__init__.py*
+-%{rhnroot}/server/__init__.py*
+-%dir %{pythonrhnroot}/server/rhnSQL
+-%{pythonrhnroot}/server/rhnSQL/const.py*
+-%{pythonrhnroot}/server/rhnSQL/dbi.py*
+-%{pythonrhnroot}/server/rhnSQL/__init__.py*
+-%{pythonrhnroot}/server/rhnSQL/sql_*.py*
+-
+-%files sql-oracle
+-%doc LICENSE
+-%{pythonrhnroot}/server/rhnSQL/driver_cx_Oracle.py*
+-
+-%files sql-postgresql
+-%doc LICENSE
+-%{pythonrhnroot}/server/rhnSQL/driver_postgresql.py*
+-
+-%files server -f %{name}-server.lang
+-%doc LICENSE
+-# modules
+-%{pythonrhnroot}/server/apacheAuth.py*
+-%{pythonrhnroot}/server/apacheHandler.py*
+-%{pythonrhnroot}/server/apacheRequest.py*
+-%{pythonrhnroot}/server/apacheServer.py*
+-%{pythonrhnroot}/server/apacheUploadServer.py*
+-%{pythonrhnroot}/server/rhnAction.py*
+-%{pythonrhnroot}/server/rhnAuthPAM.py*
+-%{pythonrhnroot}/server/rhnCapability.py*
+-%{pythonrhnroot}/server/rhnChannel.py*
+-%{pythonrhnroot}/server/rhnDependency.py*
+-%{pythonrhnroot}/server/rhnPackage.py*
+-%{pythonrhnroot}/server/rhnPackageUpload.py*
+-%{pythonrhnroot}/server/basePackageUpload.py*
+-%{pythonrhnroot}/server/rhnHandler.py*
+-%{pythonrhnroot}/server/rhnImport.py*
+-%{pythonrhnroot}/server/rhnLib.py*
+-%{pythonrhnroot}/server/rhnMapping.py*
+-%{pythonrhnroot}/server/rhnRepository.py*
+-%{pythonrhnroot}/server/rhnSession.py*
+-%{pythonrhnroot}/server/rhnUser.py*
+-%{pythonrhnroot}/server/rhnVirtualization.py*
+-%{pythonrhnroot}/server/taskomatic.py*
+-%dir %{pythonrhnroot}/server/rhnServer
+-%{pythonrhnroot}/server/rhnServer/*
+-%dir %{pythonrhnroot}/server/importlib
+-%{pythonrhnroot}/server/importlib/__init__.py*
+-%{pythonrhnroot}/server/importlib/archImport.py*
+-%{pythonrhnroot}/server/importlib/backend.py*
+-%{pythonrhnroot}/server/importlib/backendLib.py*
+-%{pythonrhnroot}/server/importlib/backendOracle.py*
+-%{pythonrhnroot}/server/importlib/backend_checker.py*
+-%{pythonrhnroot}/server/importlib/channelImport.py*
+-%{pythonrhnroot}/server/importlib/debPackage.py*
+-%{pythonrhnroot}/server/importlib/errataCache.py*
+-%{pythonrhnroot}/server/importlib/errataImport.py*
+-%{pythonrhnroot}/server/importlib/headerSource.py*
+-%{pythonrhnroot}/server/importlib/importLib.py*
+-%{pythonrhnroot}/server/importlib/kickstartImport.py*
+-%{pythonrhnroot}/server/importlib/mpmSource.py*
+-%{pythonrhnroot}/server/importlib/packageImport.py*
+-%{pythonrhnroot}/server/importlib/packageUpload.py*
+-%{pythonrhnroot}/server/importlib/productNamesImport.py*
+-%{pythonrhnroot}/server/importlib/userAuth.py*
+-%{pythonrhnroot}/server/importlib/orgImport.py*
+-%{pythonrhnroot}/server/importlib/contentSourcesImport.py*
+-%{rhnroot}/server/handlers/__init__.py*
+-
+-# Repomd stuff
+-%dir %{pythonrhnroot}/server/repomd
+-%{pythonrhnroot}/server/repomd/__init__.py*
+-%{pythonrhnroot}/server/repomd/domain.py*
+-%{pythonrhnroot}/server/repomd/mapper.py*
+-%{pythonrhnroot}/server/repomd/repository.py*
+-%{pythonrhnroot}/server/repomd/view.py*
+-
+-# the cache
+-%attr(755,%{apache_user},%{apache_group}) %dir %{_var}/cache/rhn
+-%attr(755,root,root) %dir %{_var}/cache/rhn/satsync
+-# config files
+-%attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn_server.conf
+-
+-# main httpd config
+-%attr(644,root,%{apache_group}) %config %{apacheconfd}/zz-spacewalk-server.conf
+-
+-# wsgi stuff
+-%attr(644,root,%{apache_group}) %config %{apacheconfd}/zz-spacewalk-server-wsgi.conf
+-%{rhnroot}/wsgi/app.py*
+-%{rhnroot}/wsgi/applet.py*
+-%{rhnroot}/wsgi/config.py*
+-%{rhnroot}/wsgi/config_tool.py*
+-%{rhnroot}/wsgi/package_push.py*
+-%{rhnroot}/wsgi/sat.py*
+-%{rhnroot}/wsgi/sat_dump.py*
+-%{rhnroot}/wsgi/xmlrpc.py*
+-
+-# logs and other stuff
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-server
+-
+-%if 0%{?suse_version}
+-%dir %{rhnroot}/server
+-%dir %{rhnroot}/server/handlers
+-%endif
+-
+-%files xmlrpc
+-%doc LICENSE
+-%dir %{rhnroot}/server/handlers/xmlrpc
+-%{rhnroot}/server/handlers/xmlrpc/*
+-%dir %{pythonrhnroot}/server/action
+-%{pythonrhnroot}/server/action/*
+-%dir %{pythonrhnroot}/server/action_extra_data
+-%{pythonrhnroot}/server/action_extra_data/*
+-# config files
+-%attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn_server_xmlrpc.conf
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-xmlrpc
+-
+-%files applet
+-%doc LICENSE
+-%dir %{rhnroot}/server/handlers/applet
+-%{rhnroot}/server/handlers/applet/*
+-# config files
+-%attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn_server_applet.conf
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-applet
+-
+-%files app
+-%doc LICENSE
+-%dir %{rhnroot}/server/handlers/app
+-%{rhnroot}/server/handlers/app/*
+-# config files
+-%attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn_server_app.conf
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-app
+-
+-%files iss
+-%doc LICENSE
+-%dir %{rhnroot}/server/handlers/sat
+-%{rhnroot}/server/handlers/sat/*
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-iss
+-
+-%files iss-export
+-%doc LICENSE
+-%dir %{pythonrhnroot}/satellite_exporter
+-%{pythonrhnroot}/satellite_exporter/__init__.py*
+-%{pythonrhnroot}/satellite_exporter/satexport.py*
+-
+-%dir %{rhnroot}/satellite_exporter
+-%dir %{rhnroot}/satellite_exporter/handlers
+-%{rhnroot}/satellite_exporter/__init__.py*
+-%{rhnroot}/satellite_exporter/handlers/__init__.py*
+-%{rhnroot}/satellite_exporter/handlers/non_auth_dumper.py*
+-# config files
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-iss-export
+-
+-
+-%files libs
+-%doc LICENSE
+-%{pythonrhnroot}/common/checksum.py*
+-%{pythonrhnroot}/common/cli.py*
+-%{pythonrhnroot}/common/fileutils.py*
+-%{pythonrhnroot}/common/rhn_deb.py*
+-%{pythonrhnroot}/common/rhn_mpm.py*
+-%{pythonrhnroot}/common/rhn_pkg.py*
+-%{pythonrhnroot}/common/rhn_rpm.py*
+-%{pythonrhnroot}/common/stringutils.py*
+-%{pythonrhnroot}/common/rhnLib.py*
+-%{pythonrhnroot}/common/timezone_utils.py*
+-%{pythonrhnroot}/__init__.py*
+-%{pythonrhnroot}/common/__init__.py*
++%clean
+ 
+-%if 0%{?build_py3}
+ %files -n python3-%{name}-libs
+ %doc LICENSE
+ %{python3rhnroot}/common/checksum.py
+@@ -651,138 +130,12 @@ rm -f %{rhnconf}/rhnSecret.py*
+ %dir %{python3rhnroot}/common
+ %dir %{python3rhnroot}/__pycache__
+ %endif
+-%endif
+-
+-%files config-files-common
+-%doc LICENSE
+-%{pythonrhnroot}/server/configFilesHandler.py*
+-%dir %{pythonrhnroot}/server/config_common
+-%{pythonrhnroot}/server/config_common/*
+-
+-%files config-files
+-%doc LICENSE
+-%dir %{rhnroot}/server/handlers/config
+-%{rhnroot}/server/handlers/config/*
+-%attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn_server_config-management.conf
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-config-files
+-
+-%files config-files-tool
+-%doc LICENSE
+-%dir %{rhnroot}/server/handlers/config_mgmt
+-%{rhnroot}/server/handlers/config_mgmt/*
+-%attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn_server_config-management-tool.conf
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-config-files-tool
+-
+-%files package-push-server
+-%doc LICENSE
+-%dir %{rhnroot}/upload_server
+-%{rhnroot}/upload_server/__init__.py*
+-%dir %{rhnroot}/upload_server/handlers
+-%{rhnroot}/upload_server/handlers/__init__.py*
+-%{rhnroot}/upload_server/handlers/package_push
+-%attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn_server_upload.conf
+-%attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn_server_upload_package-push.conf
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-package-push-server
+-
+-%files tools
+-%doc LICENSE
+-%doc README.ULN
+-%attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn_server_satellite.conf
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-tools
+-%attr(755,root,root) %{_bindir}/rhn-charsets
+-%attr(755,root,root) %{_bindir}/rhn-satellite-activate
+-%attr(755,root,root) %{_bindir}/rhn-schema-version
+-%attr(755,root,root) %{_bindir}/rhn-ssl-dbstore
+-%attr(755,root,root) %{_bindir}/satellite-sync
+-%attr(755,root,root) %{_bindir}/spacewalk-debug
+-%attr(755,root,root) %{_bindir}/rhn-satellite-exporter
+-%attr(755,root,root) %{_bindir}/update-packages
+-%attr(755,root,root) %{_bindir}/spacewalk-repo-sync
+-%attr(755,root,root) %{_bindir}/rhn-db-stats
+-%attr(755,root,root) %{_bindir}/rhn-schema-stats
+-%attr(755,root,root) %{_bindir}/satpasswd
+-%attr(755,root,root) %{_bindir}/satwho
+-%attr(755,root,root) %{_bindir}/spacewalk-remove-channel*
+-%attr(755,root,root) %{_bindir}/spacewalk-update-signatures
+-%attr(755,root,root) %{_bindir}/spacewalk-data-fsck
+-%attr(755,root,root) %{_bindir}/spacewalk-fips-tool
+-%{pythonrhnroot}/satellite_tools/contentRemove.py*
+-%{pythonrhnroot}/satellite_tools/SequenceServer.py*
+-%{pythonrhnroot}/satellite_tools/messages.py*
+-%{pythonrhnroot}/satellite_tools/progress_bar.py*
+-%{pythonrhnroot}/satellite_tools/req_channels.py*
+-%{pythonrhnroot}/satellite_tools/satsync.py*
+-%{pythonrhnroot}/satellite_tools/satCerts.py*
+-%{pythonrhnroot}/satellite_tools/satComputePkgHeaders.py*
+-%{pythonrhnroot}/satellite_tools/syncCache.py*
+-%{pythonrhnroot}/satellite_tools/sync_handlers.py*
+-%{pythonrhnroot}/satellite_tools/rhn_satellite_activate.py*
+-%{pythonrhnroot}/satellite_tools/rhn_ssl_dbstore.py*
+-%{pythonrhnroot}/satellite_tools/xmlWireSource.py*
+-%{pythonrhnroot}/satellite_tools/updatePackages.py*
+-%{pythonrhnroot}/satellite_tools/reposync.py*
+-%{pythonrhnroot}/satellite_tools/constants.py*
+-%{pythonrhnroot}/satellite_tools/download.py*
+-%dir %{pythonrhnroot}/satellite_tools/disk_dumper
+-%{pythonrhnroot}/satellite_tools/disk_dumper/__init__.py*
+-%{pythonrhnroot}/satellite_tools/disk_dumper/iss.py*
+-%{pythonrhnroot}/satellite_tools/disk_dumper/iss_ui.py*
+-%{pythonrhnroot}/satellite_tools/disk_dumper/iss_isos.py*
+-%{pythonrhnroot}/satellite_tools/disk_dumper/iss_actions.py*
+-%{pythonrhnroot}/satellite_tools/disk_dumper/dumper.py*
+-%{pythonrhnroot}/satellite_tools/disk_dumper/string_buffer.py*
+-%dir %{pythonrhnroot}/satellite_tools/repo_plugins
+-%attr(755,root,%{apache_group}) %dir %{_var}/log/rhn/reposync
+-%{pythonrhnroot}/satellite_tools/repo_plugins/__init__.py*
+-%{pythonrhnroot}/satellite_tools/repo_plugins/yum_src.py*
+-%{pythonrhnroot}/satellite_tools/repo_plugins/uln_src.py*
+-%{pythonrhnroot}/satellite_tools/repo_plugins/deb_src.py*
+-%config %attr(644,root,%{apache_group}) %{rhnconfigdefaults}/rhn_server_iss.conf
+-%{_mandir}/man8/rhn-satellite-exporter.8*
+-%{_mandir}/man8/rhn-charsets.8*
+-%{_mandir}/man8/rhn-satellite-activate.8*
+-%{_mandir}/man8/rhn-schema-version.8*
+-%{_mandir}/man8/rhn-ssl-dbstore.8*
+-%{_mandir}/man8/rhn-db-stats.8*
+-%{_mandir}/man8/rhn-schema-stats.8*
+-%{_mandir}/man8/satellite-sync.8*
+-%{_mandir}/man8/spacewalk-debug.8*
+-%{_mandir}/man8/satpasswd.8*
+-%{_mandir}/man8/satwho.8*
+-%{_mandir}/man8/spacewalk-fips-tool.8*
+-%{_mandir}/man8/spacewalk-remove-channel.8*
+-%{_mandir}/man8/spacewalk-repo-sync.8*
+-%{_mandir}/man8/spacewalk-data-fsck.8*
+-%{_mandir}/man8/spacewalk-update-signatures.8*
+-%{_mandir}/man8/update-packages.8*
+-
+-%files xml-export-libs
+-%doc LICENSE
+-%dir %{pythonrhnroot}/satellite_tools
+-%{pythonrhnroot}/satellite_tools/__init__.py*
+-%{pythonrhnroot}/satellite_tools/geniso.py*
+-# A bunch of modules shared with satellite-tools
+-%{pythonrhnroot}/satellite_tools/connection.py*
+-%{pythonrhnroot}/satellite_tools/diskImportLib.py*
+-%{pythonrhnroot}/satellite_tools/syncLib.py*
+-%{pythonrhnroot}/satellite_tools/xmlDiskSource.py*
+-%{pythonrhnroot}/satellite_tools/xmlSource.py*
+-%dir %{pythonrhnroot}/satellite_tools/exporter
+-%{pythonrhnroot}/satellite_tools/exporter/__init__.py*
+-%{pythonrhnroot}/satellite_tools/exporter/exportLib.py*
+-%{pythonrhnroot}/satellite_tools/exporter/xmlWriter.py*
+-
+-%files cdn
+-%attr(755,root,root) %{_bindir}/cdn-sync
+-%{pythonrhnroot}/cdn_tools/*.py*
+-%attr(755,root,%{apache_group}) %dir %{_var}/log/rhn/cdnsync
+-%config(noreplace) %{_sysconfdir}/logrotate.d/spacewalk-backend-cdn
+-%{_mandir}/man8/cdn-sync.8*
+-%if 0%{?suse_version}
+-%dir %{pythonrhnroot}/cdn_tools
+-%endif
+ 
+ %changelog
++* Fri Apr 13 2018 Tomas Kasparek <tkasparek@redhat.com> 2.8.48-3
++- build just backend-libs, nothing else is needed for RHEL8
++  (tkasparek@redhat.com)
++
+ * Wed Mar 07 2018 Tomas Kasparek <tkasparek@redhat.com> 2.8.48-2
+ - don't run pyling when building spacewalk backend + other build fixes
+   (tkasparek@redhat.com)

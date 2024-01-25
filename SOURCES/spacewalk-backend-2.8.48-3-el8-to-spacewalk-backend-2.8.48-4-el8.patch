@@ -1,0 +1,97 @@
+diff --git a/spacewalk-backend.spec b/spacewalk-backend.spec
+index 22ad9d0..d4177ff 100644
+--- a/spacewalk-backend.spec
++++ b/spacewalk-backend.spec
+@@ -37,7 +37,7 @@ Name: spacewalk-backend
+ Summary: Common programs needed to be installed on the Spacewalk servers/proxies
+ License: GPLv2
+ Version: 2.8.48
+-Release: 3%{?dist}
++Release: 4%{?dist}
+ URL:       https://github.com/spacewalkproject/spacewalk
+ Source0: https://github.com/spacewalkproject/spacewalk/archive/%{name}-%{version}.tar.gz
+ BuildArch: noarch
+@@ -50,11 +50,7 @@ This package includes the common code required by all servers/proxies.
+ Summary: Spacewalk client tools libraries for Fedora 23
+ BuildRequires: python3-devel
+ Conflicts: %{name} < 1.7.0
+-%if 0%{?suse_version}
+-Requires:       python3-base
+-%else
+ Requires: python3-libs
+-%endif
+ Requires: python3-spacewalk-usix
+ 
+ %description -n python3-%{name}-libs
+@@ -64,49 +60,13 @@ Libraries required by Spacewalk client tools on Fedora 23.
+ %setup -q
+ 
+ %build
+-make -f Makefile.backend all
+ 
+ %install
+-install -d $RPM_BUILD_ROOT%{rhnroot}
+-install -d $RPM_BUILD_ROOT%{pythonrhnroot}
+-make -f Makefile.backend install PREFIX=$RPM_BUILD_ROOT \
+-    MANDIR=%{_mandir} APACHECONFDIR=%{apacheconfd}
+-
+-%if 0%{?build_py3}
+-install -d $RPM_BUILD_ROOT%{python3rhnroot}/common
+-cp $RPM_BUILD_ROOT%{pythonrhnroot}/__init__.py \
+-    $RPM_BUILD_ROOT%{python3rhnroot}/
+-cp $RPM_BUILD_ROOT%{pythonrhnroot}/common/__init__.py \
+-    $RPM_BUILD_ROOT%{python3rhnroot}/common
+-cp $RPM_BUILD_ROOT%{pythonrhnroot}/common/{checksum.py,cli.py,rhn_deb.py,rhn_mpm.py,rhn_pkg.py,rhn_rpm.py,stringutils.py,fileutils.py,rhnLib.py} \
+-    $RPM_BUILD_ROOT%{python3rhnroot}/common
+-%endif
+-export PYTHON_MODULE_NAME=%{name}
+-export PYTHON_MODULE_VERSION=%{version}
+-%find_lang %{name}-server
+-
+-%if 0%{?fedora} || 0%{?rhel} > 6
+-sed -i 's/#LOGROTATE-3.8#//' $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/spacewalk-backend-*
+-sed -i 's/#DOCUMENTROOT#/\/var\/www\/html/' $RPM_BUILD_ROOT%{rhnconfigdefaults}/rhn.conf
+-%endif
+-%if 0%{?suse_version}
+-sed -i 's/#LOGROTATE-3.8#.*/    su root www/' $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/spacewalk-backend-*
+-sed -i 's/#DOCUMENTROOT#/\/srv\/www\/htdocs/' $RPM_BUILD_ROOT%{rhnconfigdefaults}/rhn.conf
+-pushd $RPM_BUILD_ROOT
+-find -name '*.py' -print0 | xargs -0 python %py_libdir/py_compile.py
+-popd
+-
+-%if 0%{?build_py3}
+-%py3_compile -O %{buildroot}/%{python3rhnroot}
+-%endif
+-%endif
+-
+-rm -rf $RPM_BUILD_ROOT%{rhnroot}
+-rm -rf $RPM_BUILD_ROOT%{pythonrhnroot}
+-rm -rf $RPM_BUILD_ROOT/etc
+-rm -rf $RPM_BUILD_ROOT/usr/share/locale
+-rm -rf $RPM_BUILD_ROOT/usr/bin
+-
++install -m 0755 -d $RPM_BUILD_ROOT%{python3rhnroot}/common
++install -m 0644 __init__.py $RPM_BUILD_ROOT%{python3rhnroot}/__init__.py
++install -m 0644 common/__init__.py $RPM_BUILD_ROOT%{python3rhnroot}/common/__init__.py
++install -m 0644 common/{checksum.py,cli.py,rhn_deb.py,rhn_mpm.py,rhn_pkg.py,rhn_rpm.py,stringutils.py,fileutils.py,rhnLib.py} \
++    $RPM_BUILD_ROOT%{python3rhnroot}/common/
+ 
+ %clean
+ 
+@@ -125,13 +85,11 @@ rm -rf $RPM_BUILD_ROOT/usr/bin
+ %{python3rhnroot}/common/__init__.py
+ %{python3rhnroot}/__pycache__/__init__.*
+ %{python3rhnroot}/common/__pycache__
+-%if 0%{?suse_version}
+-%dir %{python3rhnroot}
+-%dir %{python3rhnroot}/common
+-%dir %{python3rhnroot}/__pycache__
+-%endif
+ 
+ %changelog
++* Mon Apr 16 2018 Tomas Kasparek <tkasparek@redhat.com> 2.8.48-4
++- don't rely on Makefile for build (tkasparek@redhat.com)
++
+ * Fri Apr 13 2018 Tomas Kasparek <tkasparek@redhat.com> 2.8.48-3
+ - build just backend-libs, nothing else is needed for RHEL8
+   (tkasparek@redhat.com)
